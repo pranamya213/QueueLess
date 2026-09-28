@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'qr_scanner_screen.dart';
+import 'staff_dashboard_screen.dart';
 
 class CitizenHomeScreen extends StatelessWidget {
   const CitizenHomeScreen({super.key});
@@ -45,7 +46,27 @@ class CitizenHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildEmptyTokenState(),
+            const SizedBox(height: 48),
+            _buildStaffAccess(context),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStaffAccess(BuildContext context) {
+    return Center(
+      child: TextButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StaffDashboardScreen()),
+          );
+        },
+        icon: const Icon(Icons.admin_panel_settings),
+        label: const Text('Staff Dashboard (Demo)'),
+        style: TextButton.styleFrom(
+          foregroundColor: AppTheme.textSecondary,
         ),
       ),
     );
