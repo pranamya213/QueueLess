@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/queue_token.dart';
+import '../services/queue_service.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -10,21 +11,27 @@ class StaffDashboardScreen extends StatefulWidget {
 }
 
 class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
-  // Local state
-  List<QueueToken> tokens = [
-    QueueToken(tokenNumber: 'A-020', serviceName: 'Birth Certificate'),
-    QueueToken(tokenNumber: 'A-021', serviceName: 'Income Certificate'),
-    QueueToken(tokenNumber: 'A-022', serviceName: 'Pension Services'),
-    QueueToken(tokenNumber: 'A-023', serviceName: 'Residence Certificate'),
-    QueueToken(tokenNumber: 'A-024', serviceName: 'Aadhaar / ID Services'),
-    QueueToken(tokenNumber: 'A-025', serviceName: 'Other Citizen Services'),
-  ];
-
   String selectedService = 'All Services';
 
+  @override
+  void initState() {
+    super.initState();
+    QueueService().addListener(_onQueueChanged);
+  }
+
+  @override
+  void dispose() {
+    QueueService().removeListener(_onQueueChanged);
+    super.dispose();
+  }
+
+  void _onQueueChanged() {
+    setState(() {});
+  }
+
   // Statistics
-  int servedCount = 12;
-  int skippedCount = 1;
+  int get servedCount => QueueService().servedCount;
+  int get skippedCount => QueueService().skippedCount;
 
   List<String> get availableServices => [
         'All Services',
@@ -37,39 +44,20 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       ];
 
   List<QueueToken> get waitingTokens {
-    return tokens.where((t) => t.status == TokenStatus.waiting && (selectedService == 'All Services' || t.serviceName == selectedService)).toList();
+    return QueueService().waitingTokens.where((t) => selectedService == 'All Services' || t.serviceName == selectedService).toList();
   }
 
-  QueueToken? get currentlyServing {
-    try {
-      return tokens.firstWhere((t) => t.status == TokenStatus.serving);
-    } catch (e) {
-      return null;
-    }
-  }
+  QueueToken? get currentlyServing => QueueService().currentlyServing;
 
-  int get waitingCount => tokens.where((t) => t.status == TokenStatus.waiting).length;
-  int get servingCount => currentlyServing != null ? 1 : 0;
+  int get waitingCount => QueueService().waitingCount;
+  int get servingCount => QueueService().servingCount;
 
   void _callNextToken() {
-    if (currentlyServing != null) return; // Must finish current token first
-
-    final waiting = waitingTokens;
-    if (waiting.isNotEmpty) {
-      setState(() {
-        waiting.first.status = TokenStatus.serving;
-      });
-    }
+    QueueService().callNextToken(serviceFilter: selectedService);
   }
 
   void _markAsServed() {
-    final current = currentlyServing;
-    if (current != null) {
-      setState(() {
-        current.status = TokenStatus.served;
-        servedCount++;
-      });
-    }
+    QueueService().markAsServed();
   }
 
   void _skipToken() {
@@ -90,10 +78,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 onPressed: () {
                   Navigator.pop(context);
-                  setState(() {
-                    current.status = TokenStatus.skipped;
-                    skippedCount++;
-                  });
+                  QueueService().skipToken();
                 },
                 child: const Text('Skip Token'),
               ),

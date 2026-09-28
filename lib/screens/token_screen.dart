@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/queue_service.dart';
 import 'queue_status_screen.dart';
-import 'dart:math';
 
 class TokenScreen extends StatelessWidget {
   final String serviceName;
   final String officeName;
+  final String tokenNumber;
 
   const TokenScreen({
     super.key,
     required this.serviceName,
     required this.officeName,
+    required this.tokenNumber,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tokenNumber = 'A-${Random().nextInt(900) + 100}';
-    final nowServing = 'A-${int.parse(tokenNumber.split('-')[1]) - 5}';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Token'),
@@ -25,10 +24,18 @@ class TokenScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            _buildTokenCard(tokenNumber, nowServing),
-            const SizedBox(height: 32),
+        child: ListenableBuilder(
+          listenable: QueueService(),
+          builder: (context, _) {
+            final nowServing = QueueService().currentlyServing?.tokenNumber ?? '--';
+            final currentToken = QueueService().currentCitizenToken;
+            final peopleAhead = currentToken != null ? QueueService().getPeopleAhead(currentToken) : 0;
+            final estWait = peopleAhead * 5;
+
+            return Column(
+              children: [
+                _buildTokenCard(tokenNumber, nowServing, peopleAhead, estWait),
+                const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -69,14 +76,16 @@ class TokenScreen extends StatelessWidget {
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-          ],
+                ),
+              ],
+            );
+          }
         ),
       ),
     );
   }
 
-  Widget _buildTokenCard(String tokenNumber, String nowServing) {
+  Widget _buildTokenCard(String tokenNumber, String nowServing, int peopleAhead, int estWait) {
     return Card(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -126,8 +135,8 @@ class TokenScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildMiniStat('Now Serving', nowServing, AppTheme.primaryColor),
-                      _buildMiniStat('People Ahead', '5', AppTheme.secondaryColor),
-                      _buildMiniStat('Est. Wait', '15 min', AppTheme.accentColor),
+                      _buildMiniStat('People Ahead', '$peopleAhead', AppTheme.secondaryColor),
+                      _buildMiniStat('Est. Wait', '$estWait min', AppTheme.accentColor),
                     ],
                   ),
                 ],

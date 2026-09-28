@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../models/queue_token.dart';
 import 'qr_scanner_screen.dart';
 import 'staff_dashboard_screen.dart';
+import 'queue_status_screen.dart';
+import '../services/queue_service.dart';
 
 class CitizenHomeScreen extends StatelessWidget {
   const CitizenHomeScreen({super.key});
@@ -45,7 +48,16 @@ class CitizenHomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildEmptyTokenState(),
+            ListenableBuilder(
+              listenable: QueueService(),
+              builder: (context, child) {
+                final token = QueueService().currentCitizenToken;
+                if (token == null) {
+                  return _buildEmptyTokenState();
+                }
+                return _buildActiveTokenState(context, token);
+              },
+            ),
             const SizedBox(height: 48),
             _buildStaffAccess(context),
           ],
@@ -127,6 +139,38 @@ class CitizenHomeScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActiveTokenState(BuildContext context, QueueToken token) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(24),
+        leading: CircleAvatar(
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          radius: 30,
+          child: const Icon(Icons.receipt, color: AppTheme.primaryColor, size: 30),
+        ),
+        title: Text(
+          token.tokenNumber,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+        ),
+        subtitle: Text('Service: ${token.serviceName}'),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QueueStatusScreen(
+                tokenNumber: token.tokenNumber,
+                nowServing: QueueService().currentlyServing?.tokenNumber ?? '--',
+              ),
+            ),
+          );
+        },
       ),
     );
   }

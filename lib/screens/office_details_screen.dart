@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/queue_service.dart';
 import 'token_screen.dart';
 
 class OfficeDetailsScreen extends StatelessWidget {
@@ -150,12 +151,14 @@ class OfficeDetailsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context); // close dialog
+                final token = QueueService().generateCitizenToken(serviceName);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => TokenScreen(
                       serviceName: serviceName,
                       officeName: officeName,
+                      tokenNumber: token.tokenNumber,
                     ),
                   ),
                 );
