@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'citizen_home_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -228,12 +229,9 @@ class WelcomeScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton(
         onPressed: () {
-          // TODO: Navigate to home/scanner screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Navigation to next screen will be implemented later.'),
-              behavior: SnackBarBehavior.floating,
-            ),
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const CitizenHomeScreen()),
           );
         },
         style: ElevatedButton.styleFrom(
